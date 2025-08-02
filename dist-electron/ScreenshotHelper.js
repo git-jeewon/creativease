@@ -5,9 +5,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ScreenshotHelper = void 0;
-const node_path_1 = __importDefault(require("node:path"));
-const node_fs_1 = __importDefault(require("node:fs"));
-const electron_1 = require("electron");
+const path_1 = __importDefault(require("path"));
+const fs_1 = __importDefault(require("fs"));
+const os_1 = __importDefault(require("os"));
 const uuid_1 = require("uuid");
 const screenshot_desktop_1 = __importDefault(require("screenshot-desktop"));
 class ScreenshotHelper {
@@ -19,15 +19,16 @@ class ScreenshotHelper {
     view = "queue";
     constructor(view = "queue") {
         this.view = view;
-        // Initialize directories
-        this.screenshotDir = node_path_1.default.join(electron_1.app.getPath("userData"), "screenshots");
-        this.extraScreenshotDir = node_path_1.default.join(electron_1.app.getPath("userData"), "extra_screenshots");
+        // Initialize directories - CreativEase Cache on Desktop
+        const creativeaseCacheDir = path_1.default.join(os_1.default.homedir(), "Desktop", "CreativEase Cache");
+        this.screenshotDir = path_1.default.join(creativeaseCacheDir, "screenshots");
+        this.extraScreenshotDir = path_1.default.join(creativeaseCacheDir, "extra_screenshots");
         // Create directories if they don't exist
-        if (!node_fs_1.default.existsSync(this.screenshotDir)) {
-            node_fs_1.default.mkdirSync(this.screenshotDir);
+        if (!fs_1.default.existsSync(this.screenshotDir)) {
+            fs_1.default.mkdirSync(this.screenshotDir, { recursive: true });
         }
-        if (!node_fs_1.default.existsSync(this.extraScreenshotDir)) {
-            node_fs_1.default.mkdirSync(this.extraScreenshotDir);
+        if (!fs_1.default.existsSync(this.extraScreenshotDir)) {
+            fs_1.default.mkdirSync(this.extraScreenshotDir, { recursive: true });
         }
     }
     getView() {
@@ -45,7 +46,7 @@ class ScreenshotHelper {
     clearQueues() {
         // Clear screenshotQueue
         this.screenshotQueue.forEach((screenshotPath) => {
-            node_fs_1.default.unlink(screenshotPath, (err) => {
+            fs_1.default.unlink(screenshotPath, (err) => {
                 if (err)
                     console.error(`Error deleting screenshot at ${screenshotPath}:`, err);
             });
@@ -53,7 +54,7 @@ class ScreenshotHelper {
         this.screenshotQueue = [];
         // Clear extraScreenshotQueue
         this.extraScreenshotQueue.forEach((screenshotPath) => {
-            node_fs_1.default.unlink(screenshotPath, (err) => {
+            fs_1.default.unlink(screenshotPath, (err) => {
                 if (err)
                     console.error(`Error deleting extra screenshot at ${screenshotPath}:`, err);
             });
@@ -64,14 +65,14 @@ class ScreenshotHelper {
         hideMainWindow();
         let screenshotPath = "";
         if (this.view === "queue") {
-            screenshotPath = node_path_1.default.join(this.screenshotDir, `${(0, uuid_1.v4)()}.png`);
+            screenshotPath = path_1.default.join(this.screenshotDir, `${(0, uuid_1.v4)()}.png`);
             await (0, screenshot_desktop_1.default)({ filename: screenshotPath });
             this.screenshotQueue.push(screenshotPath);
             if (this.screenshotQueue.length > this.MAX_SCREENSHOTS) {
                 const removedPath = this.screenshotQueue.shift();
                 if (removedPath) {
                     try {
-                        await node_fs_1.default.promises.unlink(removedPath);
+                        await fs_1.default.promises.unlink(removedPath);
                     }
                     catch (error) {
                         console.error("Error removing old screenshot:", error);
@@ -80,14 +81,14 @@ class ScreenshotHelper {
             }
         }
         else {
-            screenshotPath = node_path_1.default.join(this.extraScreenshotDir, `${(0, uuid_1.v4)()}.png`);
+            screenshotPath = path_1.default.join(this.extraScreenshotDir, `${(0, uuid_1.v4)()}.png`);
             await (0, screenshot_desktop_1.default)({ filename: screenshotPath });
             this.extraScreenshotQueue.push(screenshotPath);
             if (this.extraScreenshotQueue.length > this.MAX_SCREENSHOTS) {
                 const removedPath = this.extraScreenshotQueue.shift();
                 if (removedPath) {
                     try {
-                        await node_fs_1.default.promises.unlink(removedPath);
+                        await fs_1.default.promises.unlink(removedPath);
                     }
                     catch (error) {
                         console.error("Error removing old screenshot:", error);
@@ -100,7 +101,7 @@ class ScreenshotHelper {
     }
     async getImagePreview(filepath) {
         try {
-            const data = await node_fs_1.default.promises.readFile(filepath);
+            const data = await fs_1.default.promises.readFile(filepath);
             return `data:image/png;base64,${data.toString("base64")}`;
         }
         catch (error) {
@@ -110,7 +111,7 @@ class ScreenshotHelper {
     }
     async deleteScreenshot(path) {
         try {
-            await node_fs_1.default.promises.unlink(path);
+            await fs_1.default.promises.unlink(path);
             if (this.view === "queue") {
                 this.screenshotQueue = this.screenshotQueue.filter((filePath) => filePath !== path);
             }

@@ -1,7 +1,8 @@
 // ScreenshotHelper.ts
 
-import path from "node:path"
-import fs from "node:fs"
+import path from "path"
+import fs from "fs"
+import os from "os"
 import { app } from "electron"
 import { v4 as uuidv4 } from "uuid"
 import screenshot from "screenshot-desktop"
@@ -19,19 +20,17 @@ export class ScreenshotHelper {
   constructor(view: "queue" | "solutions" = "queue") {
     this.view = view
 
-    // Initialize directories
-    this.screenshotDir = path.join(app.getPath("userData"), "screenshots")
-    this.extraScreenshotDir = path.join(
-      app.getPath("userData"),
-      "extra_screenshots"
-    )
+    // Initialize directories - CreativEase Cache on Desktop
+    const creativeaseCacheDir = path.join(os.homedir(), "Desktop", "CreativEase Cache")
+    this.screenshotDir = path.join(creativeaseCacheDir, "screenshots")
+    this.extraScreenshotDir = path.join(creativeaseCacheDir, "extra_screenshots")
 
     // Create directories if they don't exist
     if (!fs.existsSync(this.screenshotDir)) {
-      fs.mkdirSync(this.screenshotDir)
+      fs.mkdirSync(this.screenshotDir, { recursive: true })
     }
     if (!fs.existsSync(this.extraScreenshotDir)) {
-      fs.mkdirSync(this.extraScreenshotDir)
+      fs.mkdirSync(this.extraScreenshotDir, { recursive: true })
     }
   }
 
