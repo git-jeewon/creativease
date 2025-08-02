@@ -4,6 +4,8 @@ import { WindowHelper } from "./WindowHelper"
 import { ScreenshotHelper } from "./ScreenshotHelper"
 import { ShortcutsHelper } from "./shortcuts"
 import { ProcessingHelper } from "./ProcessingHelper"
+import { ContextHelper } from "./ContextHelper"
+import { PermissionsHelper } from "./PermissionsHelper"
 
 export class AppState {
   private static instance: AppState | null = null
@@ -12,6 +14,7 @@ export class AppState {
   private screenshotHelper: ScreenshotHelper
   public shortcutsHelper: ShortcutsHelper
   public processingHelper: ProcessingHelper
+  public contextHelper: ContextHelper
 
   // View management
   private view: "queue" | "solutions" = "queue"
@@ -53,6 +56,9 @@ export class AppState {
 
     // Initialize ProcessingHelper
     this.processingHelper = new ProcessingHelper(this)
+
+    // Initialize ContextHelper
+    this.contextHelper = new ContextHelper(this.screenshotHelper)
 
     // Initialize ShortcutsHelper
     this.shortcutsHelper = new ShortcutsHelper(this)
@@ -183,6 +189,15 @@ export class AppState {
 
   public getHasDebugged(): boolean {
     return this.hasDebugged
+  }
+
+  // Permission management
+  public async openScreenRecordingSettings(): Promise<void> {
+    return PermissionsHelper.openScreenRecordingSettings()
+  }
+
+  public async checkScreenRecordingPermission(): Promise<boolean> {
+    return PermissionsHelper.checkScreenCapturePermission()
   }
 }
 

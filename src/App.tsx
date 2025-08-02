@@ -46,7 +46,12 @@ declare global {
       
       // CreativEase Coach
       getCreativeGuidance: (data: string, mimeType: string) => Promise<{ steps: string[]; highlights: string[]; learn_more_url: string }>
-      getCreativeGuidanceFromText: (userQuestion: string) => Promise<{ steps: string[]; highlights: string[]; learn_more_url: string }>
+      getCreativeGuidanceFromText: (userQuestion: string, captureContext?: boolean) => Promise<{ steps: string[]; highlights: string[]; learn_more_url: string }>
+      captureContext: () => Promise<{ software: string; confidence: number; panels: string[]; ui_elements: string[] }>
+      
+      // Permissions
+      openScreenRecordingSettings: () => Promise<void>
+      checkScreenRecordingPermission: () => Promise<boolean>
 
       moveWindowLeft: () => Promise<void>
       moveWindowRight: () => Promise<void>

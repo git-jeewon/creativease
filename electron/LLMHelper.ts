@@ -1,5 +1,6 @@
 import { GoogleGenerativeAI, GenerativeModel } from "@google/generative-ai"
 import fs from "fs"
+import { ContextData } from "./ContextHelper"
 
 export class LLMHelper {
   private model: GenerativeModel
@@ -184,11 +185,25 @@ Return ONLY the JSON object, no markdown formatting.`;
     }
   }
 
-  public async getCreativeGuidanceFromText(userQuestion: string) {
+  public async getCreativeGuidanceFromText(userQuestion: string, context?: ContextData) {
     try {
+      let contextSection = ""
+      
+      if (context && context.software !== 'Unknown') {
+        contextSection = `
+
+SCREEN CONTEXT DETECTED:
+- Software: ${context.software} (${Math.round(context.confidence * 100)}% confidence)
+- Active UI Elements: ${context.ui_elements.join(', ') || 'None detected'}
+- Visible Panels: ${context.panels.join(', ') || 'None detected'}
+- Screen Text Sample: "${context.text_content.slice(0, 200)}..."
+
+Use this context to provide EXTREMELY specific guidance. Reference the exact panels, tools, and UI elements that are currently visible.`
+      }
+
       const prompt = `${this.systemPrompt}
 
-User is asking for help with their creative workflow: "${userQuestion}"
+User is asking for help with their creative workflow: "${userQuestion}"${contextSection}
 
 Provide structured guidance in JSON format:
 
@@ -206,11 +221,13 @@ Provide structured guidance in JSON format:
 }
 
 Focus on:
-- Specific UI navigation (menus, panels, buttons)
-- Keyboard shortcuts when helpful
-- Common creative workflows
-- Practical, actionable steps
-- Real Adobe/creative tool documentation links when possible
+- SPECIFIC UI navigation based on detected software and visible panels
+- Reference exact panel names and locations that are currently visible
+- Keyboard shortcuts relevant to the detected software
+- Workflow steps specific to the detected creative tool
+- Real documentation links for the detected software
+
+${context ? `Since I can see you're using ${context.software}, provide guidance specific to that software's interface and workflow.` : ""}
 
 Return ONLY the JSON object, no markdown formatting.`;
 

@@ -157,9 +157,27 @@ export class ProcessingHelper {
     return this.llmHelper.getCreativeGuidance(data, mimeType);
   }
 
-  // CreativEase Coach: Get guidance from text
-  public async getCreativeCoachGuidanceFromText(userQuestion: string) {
-    return this.llmHelper.getCreativeGuidanceFromText(userQuestion);
+  // CreativEase Coach: Get guidance from text with context
+  public async getCreativeCoachGuidanceFromText(userQuestion: string, captureContext: boolean = true) {
+    try {
+      let context = undefined
+      
+      if (captureContext) {
+        console.log("[ProcessingHelper] Capturing screen context for guidance...")
+        context = await this.appState.contextHelper.captureAndAnalyzeContext()
+        console.log("[ProcessingHelper] Context captured:", {
+          software: context.software,
+          confidence: context.confidence,
+          elements: context.ui_elements.length
+        })
+      }
+      
+      return this.llmHelper.getCreativeGuidanceFromText(userQuestion, context);
+    } catch (error) {
+      console.error("[ProcessingHelper] Error getting contextual guidance:", error)
+      // Fallback to guidance without context
+      return this.llmHelper.getCreativeGuidanceFromText(userQuestion);
+    }
   }
 
   public getLLMHelper() {

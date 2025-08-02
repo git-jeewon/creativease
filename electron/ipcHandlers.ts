@@ -93,12 +93,23 @@ export function initializeIpcHandlers(appState: AppState): void {
   })
 
   // IPC handler for CreativEase Coach guidance from text
-  ipcMain.handle("get-creative-guidance-from-text", async (event, userQuestion: string) => {
+  ipcMain.handle("get-creative-guidance-from-text", async (event, userQuestion: string, captureContext: boolean = true) => {
     try {
-      const result = await appState.processingHelper.getCreativeCoachGuidanceFromText(userQuestion)
+      const result = await appState.processingHelper.getCreativeCoachGuidanceFromText(userQuestion, captureContext)
       return result
     } catch (error: any) {
       console.error("Error in get-creative-guidance-from-text handler:", error)
+      throw error
+    }
+  })
+
+  // IPC handler for capturing context only
+  ipcMain.handle("capture-context", async (event) => {
+    try {
+      const context = await appState.contextHelper.captureAndAnalyzeContext()
+      return context
+    } catch (error: any) {
+      console.error("Error in capture-context handler:", error)
       throw error
     }
   })
@@ -122,6 +133,24 @@ export function initializeIpcHandlers(appState: AppState): void {
     } catch (error: any) {
       console.error("Error in analyze-image-file handler:", error)
       throw error
+    }
+  })
+
+  // Permission management handlers
+  ipcMain.handle("open-screen-recording-settings", async () => {
+    try {
+      await appState.openScreenRecordingSettings()
+    } catch (error: any) {
+      console.error("Error opening screen recording settings:", error)
+    }
+  })
+
+  ipcMain.handle("check-screen-recording-permission", async () => {
+    try {
+      return await appState.checkScreenRecordingPermission()
+    } catch (error: any) {
+      console.error("Error checking screen recording permission:", error)
+      return false
     }
   })
 

@@ -33,7 +33,10 @@ interface ElectronAPI {
   analyzeAudioFile: (path: string) => Promise<{ text: string; timestamp: number }>
   analyzeImageFile: (path: string) => Promise<void>
   getCreativeGuidance: (data: string, mimeType: string) => Promise<{ steps: string[]; highlights: string[]; learn_more_url: string }>
-  getCreativeGuidanceFromText: (userQuestion: string) => Promise<{ steps: string[]; highlights: string[]; learn_more_url: string }>
+  getCreativeGuidanceFromText: (userQuestion: string, captureContext?: boolean) => Promise<{ steps: string[]; highlights: string[]; learn_more_url: string }>
+  captureContext: () => Promise<{ software: string; confidence: number; panels: string[]; ui_elements: string[] }>
+  openScreenRecordingSettings: () => Promise<void>
+  checkScreenRecordingPermission: () => Promise<boolean>
   quitApp: () => Promise<void>
 }
 
@@ -176,6 +179,9 @@ contextBridge.exposeInMainWorld("electronAPI", {
   analyzeAudioFile: (path: string) => ipcRenderer.invoke("analyze-audio-file", path),
   analyzeImageFile: (path: string) => ipcRenderer.invoke("analyze-image-file", path),
   getCreativeGuidance: (data: string, mimeType: string) => ipcRenderer.invoke("get-creative-guidance", data, mimeType),
-  getCreativeGuidanceFromText: (userQuestion: string) => ipcRenderer.invoke("get-creative-guidance-from-text", userQuestion),
+  getCreativeGuidanceFromText: (userQuestion: string, captureContext?: boolean) => ipcRenderer.invoke("get-creative-guidance-from-text", userQuestion, captureContext),
+  captureContext: () => ipcRenderer.invoke("capture-context"),
+  openScreenRecordingSettings: () => ipcRenderer.invoke("open-screen-recording-settings"),
+  checkScreenRecordingPermission: () => ipcRenderer.invoke("check-screen-recording-permission"),
   quitApp: () => ipcRenderer.invoke("quit-app")
 } as ElectronAPI)

@@ -20,6 +20,7 @@ const QueueCommands: React.FC<QueueCommandsProps> = ({
   const [transcribedText, setTranscribedText] = useState<string>("")
   const [textInput, setTextInput] = useState<string>("")
   const [isProcessingGuidance, setIsProcessingGuidance] = useState(false)
+  const [contextData, setContextData] = useState<{ software: string; confidence: number; panels: string[]; ui_elements: string[] } | null>(null)
   const chunks = useRef<Blob[]>([])
 
   useEffect(() => {
@@ -90,11 +91,22 @@ const QueueCommands: React.FC<QueueCommandsProps> = ({
     try {
       setIsProcessingGuidance(true)
       setCoachGuidance(null)
+      setContextData(null)
       
       console.log("Getting CreativEase Coach guidance for:", text)
       
-      // Use the new text-based method
-      const guidance = await window.electronAPI.getCreativeGuidanceFromText(text)
+      // Capture context and get guidance with context
+      const guidance = await window.electronAPI.getCreativeGuidanceFromText(text, true)
+      
+      // Also capture context data for display
+      try {
+        const context = await window.electronAPI.captureContext()
+        setContextData(context)
+        console.log("Context captured:", context)
+      } catch (contextErr) {
+        console.warn("Could not capture context for display:", contextErr)
+      }
+      
       setCoachGuidance(guidance)
     } catch (err) {
       console.error("Coach guidance failed:", err)
@@ -410,7 +422,7 @@ const QueueCommands: React.FC<QueueCommandsProps> = ({
         <div className="mt-2 p-3 bg-yellow-500/20 rounded-lg text-white text-xs max-w-md border border-yellow-500/30">
           <div className="flex items-center gap-2">
             <span className="animate-spin text-yellow-400">⟳</span>
-            <span className="font-semibold text-yellow-300">Getting guidance...</span>
+            <span className="font-semibold text-yellow-300">Analyzing screen context & getting guidance...</span>
           </div>
         </div>
       )}
@@ -423,6 +435,59 @@ const QueueCommands: React.FC<QueueCommandsProps> = ({
               🎤 You asked:
             </h4>
             <p className="text-white/90 italic leading-relaxed">"{transcribedText}"</p>
+          </div>
+        </div>
+      )}
+
+      {/* Show context information when available */}
+      {contextData && contextData.software !== 'Unknown' && (
+        <div className="mt-2 p-3 bg-cyan-500/20 rounded-lg text-white text-xs max-w-md border border-cyan-500/30">
+          <div className="space-y-2">
+            <h4 className="font-semibold text-cyan-300 flex items-center gap-2">
+              🖥️ Screen Context Detected:
+            </h4>
+            <div className="space-y-1">
+              <p className="text-white/90">
+                <span className="text-cyan-200 font-medium">Software:</span> {contextData.software} 
+                <span className="text-cyan-300 ml-1">({Math.round(contextData.confidence * 100)}% confident)</span>
+              </p>
+              {contextData.panels.length > 0 && (
+                <p className="text-white/90">
+                  <span className="text-cyan-200 font-medium">Visible Panels:</span> {contextData.panels.slice(0, 3).join(', ')}
+                  {contextData.panels.length > 3 && ` +${contextData.panels.length - 3} more`}
+                </p>
+              )}
+              {contextData.ui_elements.length > 0 && (
+                <p className="text-white/90">
+                  <span className="text-cyan-200 font-medium">UI Elements:</span> {contextData.ui_elements.slice(0, 4).join(', ')}
+                  {contextData.ui_elements.length > 4 && ` +${contextData.ui_elements.length - 4} more`}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Show permission requirement message */}
+      {contextData && contextData.software === 'Permission Required' && (
+        <div className="mt-2 p-3 bg-orange-500/20 rounded-lg text-white text-xs max-w-md border border-orange-500/30">
+          <div className="space-y-3">
+            <h4 className="font-semibold text-orange-300 flex items-center gap-2">
+              🔒 Screen Recording Permission Needed
+            </h4>
+            <p className="text-white/90 leading-relaxed">
+              CreativEase Coach can provide much smarter guidance when it can see your creative software. 
+              Enable screen recording to detect which tools and panels you're using.
+            </p>
+            <button 
+              onClick={() => window.electronAPI.openScreenRecordingSettings()}
+              className="bg-orange-500/70 hover:bg-orange-500/90 transition-colors rounded-md px-3 py-1.5 text-[11px] leading-none text-white font-medium"
+            >
+              Open Privacy Settings
+            </button>
+            <p className="text-orange-200/70 text-[10px] leading-relaxed">
+              After enabling, restart CreativEase Coach for context detection to work.
+            </p>
           </div>
         </div>
       )}
