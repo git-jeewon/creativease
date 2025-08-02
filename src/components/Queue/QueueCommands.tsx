@@ -17,6 +17,9 @@ const QueueCommands: React.FC<QueueCommandsProps> = ({
   const [audioResult, setAudioResult] = useState<string | null>(null)
   const [coachGuidance, setCoachGuidance] = useState<{ steps: string[]; highlights: string[]; learn_more_url: string } | null>(null)
   const [isCoachRecording, setIsCoachRecording] = useState(false)
+  const [transcribedText, setTranscribedText] = useState<string>("")
+  const [textInput, setTextInput] = useState<string>("")
+  const [isProcessingGuidance, setIsProcessingGuidance] = useState(false)
   const chunks = useRef<Blob[]>([])
 
   useEffect(() => {
@@ -80,13 +83,39 @@ const QueueCommands: React.FC<QueueCommandsProps> = ({
     }
   }
 
-  // CreativEase Coach recording function
+  // Get guidance from text (shared function for voice and text input)
+  const getGuidanceFromText = async (text: string) => {
+    if (!text.trim()) return
+    
+    try {
+      setIsProcessingGuidance(true)
+      setCoachGuidance(null)
+      
+      console.log("Getting CreativEase Coach guidance for:", text)
+      
+      // Use the new text-based method
+      const guidance = await window.electronAPI.getCreativeGuidanceFromText(text)
+      setCoachGuidance(guidance)
+    } catch (err) {
+      console.error("Coach guidance failed:", err)
+      setCoachGuidance({
+        steps: ["Sorry, CreativEase Coach had an error processing your request."],
+        highlights: [],
+        learn_more_url: ""
+      })
+    } finally {
+      setIsProcessingGuidance(false)
+    }
+  }
+
+  // CreativEase Coach recording function (now with transcription display)
   const startCoachRecording = async () => {
     if (isCoachRecording) return // Prevent double recording
     
     try {
       setIsCoachRecording(true)
       setCoachGuidance(null) // Clear previous guidance
+      setTranscribedText("") // Clear previous transcription
       
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
       const recorder = new MediaRecorder(stream)
@@ -99,11 +128,17 @@ const QueueCommands: React.FC<QueueCommandsProps> = ({
         reader.onloadend = async () => {
           const base64Data = (reader.result as string).split(',')[1]
           try {
-            console.log("Getting CreativEase Coach guidance...")
-            const guidance = await window.electronAPI.getCreativeGuidance(base64Data, blob.type)
-            setCoachGuidance(guidance)
+            // Step 1: Transcribe the audio to text
+            console.log("Transcribing audio...")
+            const transcription = await window.electronAPI.analyzeAudioFromBase64(base64Data, blob.type)
+            setTranscribedText(transcription.text)
+            
+            // Step 2: Get guidance from the transcribed text
+            await getGuidanceFromText(transcription.text)
+            
           } catch (err) {
-            console.error("Coach guidance failed:", err)
+            console.error("Coach transcription/guidance failed:", err)
+            setTranscribedText("Could not transcribe audio.")
             setCoachGuidance({
               steps: ["Sorry, CreativEase Coach had an error processing your request."],
               highlights: [],
@@ -131,6 +166,15 @@ const QueueCommands: React.FC<QueueCommandsProps> = ({
         highlights: [],
         learn_more_url: ""
       })
+    }
+  }
+
+  // Handle text input submission
+  const handleTextSubmit = () => {
+    if (textInput.trim()) {
+      setTranscribedText(textInput.trim())
+      getGuidanceFromText(textInput.trim())
+      setTextInput("") // Clear input after submission
     }
   }
 
@@ -209,6 +253,26 @@ const QueueCommands: React.FC<QueueCommandsProps> = ({
               E
             </button>
           </div>
+        </div>
+
+        {/* Text Input for Coach */}
+        <div className="flex items-center gap-2">
+          <input
+            type="text"
+            value={textInput}
+            onChange={(e) => setTextInput(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && handleTextSubmit()}
+            placeholder="Or type your creative question..."
+            className="bg-white/10 border border-white/20 rounded-md px-2 py-1 text-[11px] text-white placeholder-white/50 focus:bg-white/20 focus:border-white/40 outline-none"
+            style={{ width: '200px' }}
+          />
+          <button
+            onClick={handleTextSubmit}
+            disabled={!textInput.trim() || isProcessingGuidance}
+            className="bg-blue-500/70 hover:bg-blue-500/90 disabled:bg-white/10 disabled:text-white/30 transition-colors rounded-md px-2 py-1 text-[11px] leading-none text-white"
+          >
+            Ask
+          </button>
         </div>
 
         {/* Question mark with tooltip */}
@@ -338,6 +402,27 @@ const QueueCommands: React.FC<QueueCommandsProps> = ({
           <div className="flex items-center gap-2">
             <span className="animate-pulse text-blue-400">●</span>
             <span className="font-semibold text-blue-300">CreativEase Coach listening...</span>
+          </div>
+        </div>
+      )}
+
+      {isProcessingGuidance && (
+        <div className="mt-2 p-3 bg-yellow-500/20 rounded-lg text-white text-xs max-w-md border border-yellow-500/30">
+          <div className="flex items-center gap-2">
+            <span className="animate-spin text-yellow-400">⟳</span>
+            <span className="font-semibold text-yellow-300">Getting guidance...</span>
+          </div>
+        </div>
+      )}
+
+      {/* Show transcribed text when available */}
+      {transcribedText && (
+        <div className="mt-2 p-3 bg-purple-500/20 rounded-lg text-white text-xs max-w-md border border-purple-500/30">
+          <div className="space-y-2">
+            <h4 className="font-semibold text-purple-300 flex items-center gap-2">
+              🎤 You asked:
+            </h4>
+            <p className="text-white/90 italic leading-relaxed">"{transcribedText}"</p>
           </div>
         </div>
       )}

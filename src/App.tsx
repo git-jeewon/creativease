@@ -46,6 +46,7 @@ declare global {
       
       // CreativEase Coach
       getCreativeGuidance: (data: string, mimeType: string) => Promise<{ steps: string[]; highlights: string[]; learn_more_url: string }>
+      getCreativeGuidanceFromText: (userQuestion: string) => Promise<{ steps: string[]; highlights: string[]; learn_more_url: string }>
 
       moveWindowLeft: () => Promise<void>
       moveWindowRight: () => Promise<void>

@@ -184,6 +184,46 @@ Return ONLY the JSON object, no markdown formatting.`;
     }
   }
 
+  public async getCreativeGuidanceFromText(userQuestion: string) {
+    try {
+      const prompt = `${this.systemPrompt}
+
+User is asking for help with their creative workflow: "${userQuestion}"
+
+Provide structured guidance in JSON format:
+
+{
+  "steps": [
+    "Step 1: Specific action with UI references",
+    "Step 2: Next action to take", 
+    "Step 3: Final step or verification"
+  ],
+  "highlights": [
+    "UI Panel or Button to highlight",
+    "Menu item or shortcut to emphasize"
+  ],
+  "learn_more_url": "https://helpx.adobe.com/relevant-tutorial-link"
+}
+
+Focus on:
+- Specific UI navigation (menus, panels, buttons)
+- Keyboard shortcuts when helpful
+- Common creative workflows
+- Practical, actionable steps
+- Real Adobe/creative tool documentation links when possible
+
+Return ONLY the JSON object, no markdown formatting.`;
+
+      const result = await this.model.generateContent(prompt);
+      const response = await result.response;
+      const text = this.cleanJsonResponse(response.text());
+      return JSON.parse(text);
+    } catch (error) {
+      console.error("Error in getCreativeGuidanceFromText:", error);
+      throw error;
+    }
+  }
+
   public async analyzeImageFile(imagePath: string) {
     try {
       const imageData = await fs.promises.readFile(imagePath);

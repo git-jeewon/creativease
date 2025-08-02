@@ -157,6 +157,11 @@ export class ProcessingHelper {
     return this.llmHelper.getCreativeGuidance(data, mimeType);
   }
 
+  // CreativEase Coach: Get guidance from text
+  public async getCreativeCoachGuidanceFromText(userQuestion: string) {
+    return this.llmHelper.getCreativeGuidanceFromText(userQuestion);
+  }
+
   public getLLMHelper() {
     return this.llmHelper;
   }
