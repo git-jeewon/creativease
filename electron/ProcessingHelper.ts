@@ -152,6 +152,11 @@ export class ProcessingHelper {
     return this.llmHelper.analyzeAudioFile(filePath);
   }
 
+  // CreativEase Coach: Get structured creative guidance
+  public async getCreativeCoachGuidance(data: string, mimeType: string) {
+    return this.llmHelper.getCreativeGuidance(data, mimeType);
+  }
+
   public getLLMHelper() {
     return this.llmHelper;
   }

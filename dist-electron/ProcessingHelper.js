@@ -132,6 +132,10 @@ class ProcessingHelper {
     async processAudioFile(filePath) {
         return this.llmHelper.analyzeAudioFile(filePath);
     }
+    // CreativEase Coach: Get structured creative guidance
+    async getCreativeCoachGuidance(data, mimeType) {
+        return this.llmHelper.getCreativeGuidance(data, mimeType);
+    }
     getLLMHelper() {
         return this.llmHelper;
     }

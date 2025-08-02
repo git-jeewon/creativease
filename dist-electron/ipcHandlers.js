@@ -72,6 +72,17 @@ function initializeIpcHandlers(appState) {
             throw error;
         }
     });
+    // IPC handler for CreativEase Coach guidance
+    electron_1.ipcMain.handle("get-creative-guidance", async (event, data, mimeType) => {
+        try {
+            const result = await appState.processingHelper.getCreativeCoachGuidance(data, mimeType);
+            return result;
+        }
+        catch (error) {
+            console.error("Error in get-creative-guidance handler:", error);
+            throw error;
+        }
+    });
     // IPC handler for analyzing audio from file path
     electron_1.ipcMain.handle("analyze-audio-file", async (event, path) => {
         try {

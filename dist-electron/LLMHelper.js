@@ -8,7 +8,7 @@ const generative_ai_1 = require("@google/generative-ai");
 const fs_1 = __importDefault(require("fs"));
 class LLMHelper {
     model;
-    systemPrompt = `You are Wingman AI, a helpful, proactive assistant for any kind of problem or situation (not just coding). For any user input, analyze the situation, provide a clear problem statement, relevant context, and suggest several possible responses or actions the user could take next. Always explain your reasoning. Present your suggestions as a list of options or next steps.`;
+    systemPrompt = `You are CreativEase Coach, an expert assistant for creative tools like Adobe Premiere Pro, DaVinci Resolve, After Effects, Photoshop, Illustrator, and Final Cut Pro. You help users solve workflow challenges, learn new techniques, and navigate complex UI features. Always provide clear, actionable step-by-step guidance with specific UI references and helpful tips for creative professionals.`;
     constructor(apiKey) {
         const genAI = new generative_ai_1.GoogleGenerativeAI(apiKey);
         this.model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
@@ -106,7 +106,7 @@ class LLMHelper {
                     mimeType: "audio/mp3"
                 }
             };
-            const prompt = `${this.systemPrompt}\n\nDescribe this audio clip in a short, concise answer. In addition to your main answer, suggest several possible actions or responses the user could take next based on the audio. Do not return a structured JSON object, just answer naturally as you would to a user.`;
+            const prompt = `${this.systemPrompt}\n\nListen to this creative workflow question or challenge. Provide a helpful, concise response with specific steps they can take in their creative software. Focus on practical solutions for video editing, design, or creative workflows. Answer naturally and be specific about UI elements, menus, or techniques.`;
             const result = await this.model.generateContent([prompt, audioPart]);
             const response = await result.response;
             const text = response.text();
@@ -125,7 +125,7 @@ class LLMHelper {
                     mimeType
                 }
             };
-            const prompt = `${this.systemPrompt}\n\nDescribe this audio clip in a short, concise answer. In addition to your main answer, suggest several possible actions or responses the user could take next based on the audio. Do not return a structured JSON object, just answer naturally as you would to a user and be concise.`;
+            const prompt = `${this.systemPrompt}\n\nListen to this creative workflow question or challenge. Provide a helpful, concise response with specific steps they can take in their creative software. Focus on practical solutions for video editing, design, or creative workflows. Answer naturally and be specific about UI elements, menus, or techniques. Be concise.`;
             const result = await this.model.generateContent([prompt, audioPart]);
             const response = await result.response;
             const text = response.text();
@@ -133,6 +133,49 @@ class LLMHelper {
         }
         catch (error) {
             console.error("Error analyzing audio from base64:", error);
+            throw error;
+        }
+    }
+    async getCreativeGuidance(data, mimeType) {
+        try {
+            const audioPart = {
+                inlineData: {
+                    data,
+                    mimeType
+                }
+            };
+            const prompt = `${this.systemPrompt}
+
+User is asking for help with their creative workflow. Listen to their question and provide structured guidance in JSON format:
+
+{
+  "steps": [
+    "Step 1: Specific action with UI references",
+    "Step 2: Next action to take", 
+    "Step 3: Final step or verification"
+  ],
+  "highlights": [
+    "UI Panel or Button to highlight",
+    "Menu item or shortcut to emphasize"
+  ],
+  "learn_more_url": "https://helpx.adobe.com/relevant-tutorial-link"
+}
+
+Focus on:
+- Specific UI navigation (menus, panels, buttons)
+- Keyboard shortcuts when helpful
+- Common creative workflows
+- Practical, actionable steps
+- Real Adobe/creative tool documentation links when possible
+
+Return ONLY the JSON object, no markdown formatting.`;
+            const result = await this.model.generateContent([prompt, audioPart]);
+            const response = await result.response;
+            const text = this.cleanJsonResponse(response.text());
+            return JSON.parse(text);
+        }
+        catch (error) {
+            console.error("Error in getCreativeGuidance:", error);
             throw error;
         }
     }

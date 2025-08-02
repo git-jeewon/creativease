@@ -42,6 +42,9 @@ declare global {
       // Audio Processing
       analyzeAudioFromBase64: (data: string, mimeType: string) => Promise<{ text: string; timestamp: number }>
       analyzeAudioFile: (path: string) => Promise<{ text: string; timestamp: number }>
+      
+      // CreativEase Coach
+      getCreativeGuidance: (data: string, mimeType: string) => Promise<{ steps: string[]; highlights: string[]; learn_more_url: string }>
 
       moveWindowLeft: () => Promise<void>
       moveWindowRight: () => Promise<void>

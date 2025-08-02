@@ -81,6 +81,17 @@ export function initializeIpcHandlers(appState: AppState): void {
     }
   })
 
+  // IPC handler for CreativEase Coach guidance
+  ipcMain.handle("get-creative-guidance", async (event, data: string, mimeType: string) => {
+    try {
+      const result = await appState.processingHelper.getCreativeCoachGuidance(data, mimeType)
+      return result
+    } catch (error: any) {
+      console.error("Error in get-creative-guidance handler:", error)
+      throw error
+    }
+  })
+
   // IPC handler for analyzing audio from file path
   ipcMain.handle("analyze-audio-file", async (event, path: string) => {
     try {
