@@ -15,6 +15,8 @@ const QueueCommands: React.FC<QueueCommandsProps> = ({
   const [isRecording, setIsRecording] = useState(false)
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null)
   const [audioResult, setAudioResult] = useState<string | null>(null)
+  const [coachGuidance, setCoachGuidance] = useState<{ steps: string[]; highlights: string[]; learn_more_url: string } | null>(null)
+  const [isCoachRecording, setIsCoachRecording] = useState(false)
   const chunks = useRef<Blob[]>([])
 
   useEffect(() => {
@@ -24,6 +26,15 @@ const QueueCommands: React.FC<QueueCommandsProps> = ({
     }
     onTooltipVisibilityChange(isTooltipVisible, tooltipHeight)
   }, [isTooltipVisible])
+
+  // Listen for CreativEase Coach shortcut (Cmd+Shift+E)
+  useEffect(() => {
+    const cleanup = window.electronAPI.onStartCreativeCoachRecording(() => {
+      console.log("CreativEase Coach triggered via shortcut!")
+      startCoachRecording()
+    })
+    return cleanup
+  }, [])
 
   const handleMouseEnter = () => {
     setIsTooltipVisible(true)
@@ -66,6 +77,60 @@ const QueueCommands: React.FC<QueueCommandsProps> = ({
       mediaRecorder?.stop()
       setIsRecording(false)
       setMediaRecorder(null)
+    }
+  }
+
+  // CreativEase Coach recording function
+  const startCoachRecording = async () => {
+    if (isCoachRecording) return // Prevent double recording
+    
+    try {
+      setIsCoachRecording(true)
+      setCoachGuidance(null) // Clear previous guidance
+      
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      const recorder = new MediaRecorder(stream)
+      const coachChunks: Blob[] = []
+      
+      recorder.ondataavailable = (e) => coachChunks.push(e.data)
+      recorder.onstop = async () => {
+        const blob = new Blob(coachChunks, { type: coachChunks[0]?.type || 'audio/webm' })
+        const reader = new FileReader()
+        reader.onloadend = async () => {
+          const base64Data = (reader.result as string).split(',')[1]
+          try {
+            console.log("Getting CreativEase Coach guidance...")
+            const guidance = await window.electronAPI.getCreativeGuidance(base64Data, blob.type)
+            setCoachGuidance(guidance)
+          } catch (err) {
+            console.error("Coach guidance failed:", err)
+            setCoachGuidance({
+              steps: ["Sorry, CreativEase Coach had an error processing your request."],
+              highlights: [],
+              learn_more_url: ""
+            })
+          }
+        }
+        reader.readAsDataURL(blob)
+        setIsCoachRecording(false)
+      }
+      
+      recorder.start()
+      // Auto-stop after 5 seconds
+      setTimeout(() => {
+        if (recorder.state === 'recording') {
+          recorder.stop()
+        }
+      }, 5000)
+      
+    } catch (err) {
+      console.error("Coach recording error:", err)
+      setIsCoachRecording(false)
+      setCoachGuidance({
+        steps: ["Could not start voice recording. Please check microphone permissions."],
+        highlights: [],
+        learn_more_url: ""
+      })
     }
   }
 
@@ -128,6 +193,22 @@ const QueueCommands: React.FC<QueueCommandsProps> = ({
               <span>🎤 Record Voice</span>
             )}
           </button>
+        </div>
+
+        {/* CreativEase Coach Button */}
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] leading-none">Coach</span>
+          <div className="flex gap-1">
+            <button className="bg-white/10 hover:bg-white/20 transition-colors rounded-md px-1.5 py-1 text-[11px] leading-none text-white/70">
+              ⌘
+            </button>
+            <button className="bg-white/10 hover:bg-white/20 transition-colors rounded-md px-1.5 py-1 text-[11px] leading-none text-white/70">
+              ⇧
+            </button>
+            <button className="bg-white/10 hover:bg-white/20 transition-colors rounded-md px-1.5 py-1 text-[11px] leading-none text-white/70">
+              E
+            </button>
+          </div>
         </div>
 
         {/* Question mark with tooltip */}
@@ -204,6 +285,27 @@ const QueueCommands: React.FC<QueueCommandsProps> = ({
                         Generate a solution based on the current problem.
                       </p>
                     </div>
+
+                    {/* CreativEase Coach Command */}
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between">
+                        <span className="truncate">CreativEase Coach</span>
+                        <div className="flex gap-1 flex-shrink-0">
+                          <span className="bg-white/10 px-1.5 py-0.5 rounded text-[10px] leading-none">
+                            ⌘
+                          </span>
+                          <span className="bg-white/10 px-1.5 py-0.5 rounded text-[10px] leading-none">
+                            ⇧
+                          </span>
+                          <span className="bg-white/10 px-1.5 py-0.5 rounded text-[10px] leading-none">
+                            E
+                          </span>
+                        </div>
+                      </div>
+                      <p className="text-[10px] leading-relaxed text-white/70 truncate">
+                        Ask for instant creative workflow guidance. Say things like "How do I color grade in DaVinci?" or "Fix audio sync in Premiere".
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -227,6 +329,61 @@ const QueueCommands: React.FC<QueueCommandsProps> = ({
       {audioResult && (
         <div className="mt-2 p-2 bg-white/10 rounded text-white text-xs max-w-md">
           <span className="font-semibold">Audio Result:</span> {audioResult}
+        </div>
+      )}
+
+      {/* CreativEase Coach Guidance Display */}
+      {isCoachRecording && (
+        <div className="mt-2 p-3 bg-blue-500/20 rounded-lg text-white text-xs max-w-md border border-blue-500/30">
+          <div className="flex items-center gap-2">
+            <span className="animate-pulse text-blue-400">●</span>
+            <span className="font-semibold text-blue-300">CreativEase Coach listening...</span>
+          </div>
+        </div>
+      )}
+
+      {coachGuidance && (
+        <div className="mt-2 p-3 bg-green-500/20 rounded-lg text-white text-xs max-w-md border border-green-500/30">
+          <div className="space-y-3">
+            <h4 className="font-semibold text-green-300 flex items-center gap-2">
+              🎨 CreativEase Coach
+            </h4>
+            
+            {coachGuidance.steps.length > 0 && (
+              <div>
+                <p className="font-medium text-green-200 mb-1">Steps:</p>
+                <ol className="list-decimal list-inside space-y-1 text-white/90">
+                  {coachGuidance.steps.map((step, index) => (
+                    <li key={index} className="text-[11px] leading-relaxed">{step}</li>
+                  ))}
+                </ol>
+              </div>
+            )}
+
+            {coachGuidance.highlights.length > 0 && (
+              <div>
+                <p className="font-medium text-green-200 mb-1">Focus on:</p>
+                <ul className="list-disc list-inside space-y-1 text-white/90">
+                  {coachGuidance.highlights.map((highlight, index) => (
+                    <li key={index} className="text-[11px] leading-relaxed">{highlight}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {coachGuidance.learn_more_url && (
+              <div>
+                <a 
+                  href={coachGuidance.learn_more_url} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-blue-300 hover:text-blue-200 underline text-[11px]"
+                >
+                  📖 Learn More
+                </a>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>

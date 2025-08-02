@@ -90,6 +90,20 @@ export class ShortcutsHelper {
       }
     })
 
+    // CreativEase Coach: Instant voice guidance
+    globalShortcut.register("CommandOrControl+Shift+E", () => {
+      console.log("CreativEase Coach activated! Starting voice recording...")
+      const mainWindow = this.appState.getMainWindow()
+      if (mainWindow) {
+        // Show window if hidden
+        if (!this.appState.isVisible()) {
+          this.appState.showMainWindow()
+        }
+        // Trigger voice recording for coach guidance
+        mainWindow.webContents.send("start-creative-coach-recording")
+      }
+    })
+
     // Unregister shortcuts when quitting
     app.on("will-quit", () => {
       globalShortcut.unregisterAll()

@@ -23,6 +23,7 @@ declare global {
       ) => () => void
       onProcessingNoScreenshots: (callback: () => void) => () => void
       onResetView: (callback: () => void) => () => void
+      onStartCreativeCoachRecording: (callback: () => void) => () => void
       takeScreenshot: () => Promise<void>
 
       //INITIAL SOLUTION EVENTS

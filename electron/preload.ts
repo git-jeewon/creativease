@@ -25,12 +25,14 @@ interface ElectronAPI {
 
   onUnauthorized: (callback: () => void) => () => void
   onDebugError: (callback: (error: string) => void) => () => void
+  onStartCreativeCoachRecording: (callback: () => void) => () => void
   takeScreenshot: () => Promise<void>
   moveWindowLeft: () => Promise<void>
   moveWindowRight: () => Promise<void>
   analyzeAudioFromBase64: (data: string, mimeType: string) => Promise<{ text: string; timestamp: number }>
   analyzeAudioFile: (path: string) => Promise<{ text: string; timestamp: number }>
   analyzeImageFile: (path: string) => Promise<void>
+  getCreativeGuidance: (data: string, mimeType: string) => Promise<{ steps: string[]; highlights: string[]; learn_more_url: string }>
   quitApp: () => Promise<void>
 }
 
@@ -160,10 +162,18 @@ contextBridge.exposeInMainWorld("electronAPI", {
       ipcRenderer.removeListener(PROCESSING_EVENTS.UNAUTHORIZED, subscription)
     }
   },
+  onStartCreativeCoachRecording: (callback: () => void) => {
+    const subscription = () => callback()
+    ipcRenderer.on("start-creative-coach-recording", subscription)
+    return () => {
+      ipcRenderer.removeListener("start-creative-coach-recording", subscription)
+    }
+  },
   moveWindowLeft: () => ipcRenderer.invoke("move-window-left"),
   moveWindowRight: () => ipcRenderer.invoke("move-window-right"),
   analyzeAudioFromBase64: (data: string, mimeType: string) => ipcRenderer.invoke("analyze-audio-base64", data, mimeType),
   analyzeAudioFile: (path: string) => ipcRenderer.invoke("analyze-audio-file", path),
   analyzeImageFile: (path: string) => ipcRenderer.invoke("analyze-image-file", path),
+  getCreativeGuidance: (data: string, mimeType: string) => ipcRenderer.invoke("get-creative-guidance", data, mimeType),
   quitApp: () => ipcRenderer.invoke("quit-app")
 } as ElectronAPI)
