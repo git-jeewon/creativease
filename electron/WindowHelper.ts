@@ -76,9 +76,10 @@ export class WindowHelper {
     this.currentX = 0 // Start at the left
 
     const windowSettings: Electron.BrowserWindowConstructorOptions = {
+      width: 800, // Set a proper width for CreativEase Coach content
       height: 600,
-      minWidth: undefined,
-      maxWidth: undefined,
+      minWidth: 600, // Minimum width to prevent cut-off
+      maxWidth: 1200, // Maximum width to keep it manageable
       x: this.currentX,
       y: 0,
       webPreferences: {

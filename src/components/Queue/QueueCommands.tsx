@@ -191,8 +191,8 @@ const QueueCommands: React.FC<QueueCommandsProps> = ({
   }
 
   return (
-    <div className="pt-2 w-fit">
-      <div className="text-xs text-white/90 backdrop-blur-md bg-black/60 rounded-lg py-2 px-4 flex items-center justify-center gap-4">
+    <div className="pt-2 w-full max-w-4xl">
+      <div className="text-xs text-white/90 backdrop-blur-md bg-black/60 rounded-lg py-2 px-4 flex items-center justify-center gap-4 flex-wrap">
         {/* Show/Hide */}
         <div className="flex items-center gap-2">
           <span className="text-[11px] leading-none">Show/Hide</span>
@@ -268,20 +268,19 @@ const QueueCommands: React.FC<QueueCommandsProps> = ({
         </div>
 
         {/* Text Input for Coach */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-1 min-w-0">
           <input
             type="text"
             value={textInput}
             onChange={(e) => setTextInput(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleTextSubmit()}
-            placeholder="Or type your creative question..."
-            className="bg-white/10 border border-white/20 rounded-md px-2 py-1 text-[11px] text-white placeholder-white/50 focus:bg-white/20 focus:border-white/40 outline-none"
-            style={{ width: '200px' }}
+            placeholder="Type your creative question..."
+            className="bg-white/10 border border-white/20 rounded-md px-2 py-1 text-[11px] text-white placeholder-white/50 focus:bg-white/20 focus:border-white/40 outline-none flex-1 min-w-0"
           />
           <button
             onClick={handleTextSubmit}
             disabled={!textInput.trim() || isProcessingGuidance}
-            className="bg-blue-500/70 hover:bg-blue-500/90 disabled:bg-white/10 disabled:text-white/30 transition-colors rounded-md px-2 py-1 text-[11px] leading-none text-white"
+            className="bg-blue-500/70 hover:bg-blue-500/90 disabled:bg-white/10 disabled:text-white/30 transition-colors rounded-md px-2 py-1 text-[11px] leading-none text-white flex-shrink-0"
           >
             Ask
           </button>
@@ -301,7 +300,7 @@ const QueueCommands: React.FC<QueueCommandsProps> = ({
           {isTooltipVisible && (
             <div
               ref={tooltipRef}
-              className="absolute top-full right-0 mt-2 w-80"
+              className="absolute top-full right-0 mt-2 w-80 max-w-[90vw] z-50"
             >
               <div className="p-3 text-xs bg-black/80 backdrop-blur-md rounded-lg border border-white/10 text-white/90 shadow-lg">
                 <div className="space-y-4">
@@ -403,14 +402,14 @@ const QueueCommands: React.FC<QueueCommandsProps> = ({
       </div>
       {/* Audio Result Display */}
       {audioResult && (
-        <div className="mt-2 p-2 bg-white/10 rounded text-white text-xs max-w-md">
+        <div className="mt-2 p-2 bg-white/10 rounded text-white text-xs max-w-full break-words">
           <span className="font-semibold">Audio Result:</span> {audioResult}
         </div>
       )}
 
       {/* CreativEase Coach Guidance Display */}
       {isCoachRecording && (
-        <div className="mt-2 p-3 bg-blue-500/20 rounded-lg text-white text-xs max-w-md border border-blue-500/30">
+        <div className="mt-2 p-3 bg-blue-500/20 rounded-lg text-white text-xs max-w-full border border-blue-500/30">
           <div className="flex items-center gap-2">
             <span className="animate-pulse text-blue-400">●</span>
             <span className="font-semibold text-blue-300">CreativEase Coach listening...</span>
@@ -419,7 +418,7 @@ const QueueCommands: React.FC<QueueCommandsProps> = ({
       )}
 
       {isProcessingGuidance && (
-        <div className="mt-2 p-3 bg-yellow-500/20 rounded-lg text-white text-xs max-w-md border border-yellow-500/30">
+        <div className="mt-2 p-3 bg-yellow-500/20 rounded-lg text-white text-xs max-w-full border border-yellow-500/30">
           <div className="flex items-center gap-2">
             <span className="animate-spin text-yellow-400">⟳</span>
             <span className="font-semibold text-yellow-300">Analyzing screen context & getting guidance...</span>
@@ -429,19 +428,19 @@ const QueueCommands: React.FC<QueueCommandsProps> = ({
 
       {/* Show transcribed text when available */}
       {transcribedText && (
-        <div className="mt-2 p-3 bg-purple-500/20 rounded-lg text-white text-xs max-w-md border border-purple-500/30">
+        <div className="mt-2 p-3 bg-purple-500/20 rounded-lg text-white text-xs max-w-full border border-purple-500/30">
           <div className="space-y-2">
             <h4 className="font-semibold text-purple-300 flex items-center gap-2">
               🎤 You asked:
             </h4>
-            <p className="text-white/90 italic leading-relaxed">"{transcribedText}"</p>
+            <p className="text-white/90 italic leading-relaxed break-words">"{transcribedText}"</p>
           </div>
         </div>
       )}
 
       {/* Show context information when available */}
       {contextData && contextData.software !== 'Unknown' && (
-        <div className="mt-2 p-3 bg-cyan-500/20 rounded-lg text-white text-xs max-w-md border border-cyan-500/30">
+        <div className="mt-2 p-3 bg-cyan-500/20 rounded-lg text-white text-xs max-w-full border border-cyan-500/30">
           <div className="space-y-2">
             <h4 className="font-semibold text-cyan-300 flex items-center gap-2">
               🖥️ Screen Context Detected:
@@ -470,7 +469,7 @@ const QueueCommands: React.FC<QueueCommandsProps> = ({
 
       {/* Show permission requirement message */}
       {contextData && contextData.software === 'Permission Required' && (
-        <div className="mt-2 p-3 bg-orange-500/20 rounded-lg text-white text-xs max-w-md border border-orange-500/30">
+        <div className="mt-2 p-3 bg-orange-500/20 rounded-lg text-white text-xs max-w-full border border-orange-500/30">
           <div className="space-y-3">
             <h4 className="font-semibold text-orange-300 flex items-center gap-2">
               🔒 Screen Recording Permission Needed
@@ -493,7 +492,7 @@ const QueueCommands: React.FC<QueueCommandsProps> = ({
       )}
 
       {coachGuidance && (
-        <div className="mt-2 p-3 bg-green-500/20 rounded-lg text-white text-xs max-w-md border border-green-500/30">
+        <div className="mt-2 p-3 bg-green-500/20 rounded-lg text-white text-xs max-w-full border border-green-500/30">
           <div className="space-y-3">
             <h4 className="font-semibold text-green-300 flex items-center gap-2">
               🎨 CreativEase Coach

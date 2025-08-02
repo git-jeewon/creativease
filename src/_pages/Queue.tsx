@@ -128,7 +128,7 @@ const Queue: React.FC<QueueProps> = ({ setView }) => {
   }
 
   return (
-    <div ref={contentRef} className={`bg-transparent w-1/2`}>
+    <div ref={contentRef} className={`bg-transparent w-full max-w-4xl`}>
       <div className="px-4 py-3">
         <Toast
           open={toastOpen}
@@ -140,7 +140,7 @@ const Queue: React.FC<QueueProps> = ({ setView }) => {
           <ToastDescription>{toastMessage.description}</ToastDescription>
         </Toast>
 
-        <div className="space-y-3 w-fit">
+        <div className="space-y-3 w-full">
           <ScreenshotQueue
             isLoading={false}
             screenshots={screenshots}

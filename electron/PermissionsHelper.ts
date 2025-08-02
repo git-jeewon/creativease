@@ -36,6 +36,28 @@ export class PermissionsHelper {
     if (!hasPermission && process.platform === 'darwin') {
       console.log('[PermissionsHelper] Screen recording permission needed for context detection')
       console.log('[PermissionsHelper] To enable: System Preferences → Privacy & Security → Screen Recording → Enable CreativEase')
+      
+      // Try to trigger the permission dialog by attempting a screenshot
+      try {
+        console.log('[PermissionsHelper] Attempting to trigger permission dialog...')
+        // This will trigger the macOS permission dialog on first use
+        const screenshot = require('screenshot-desktop')
+        await screenshot({ filename: '/tmp/permission-test.png' })
+        
+        // Clean up the test screenshot
+        const fs = require('fs')
+        try {
+          fs.unlinkSync('/tmp/permission-test.png')
+        } catch (e) {
+          // Ignore cleanup errors
+        }
+        
+        // Check permission again after potential grant
+        return await this.checkScreenCapturePermission()
+      } catch (error) {
+        console.log('[PermissionsHelper] Permission dialog triggered, user needs to grant access')
+        return false
+      }
     }
     
     return hasPermission
